@@ -16,7 +16,7 @@
 FitCache operates by intercepting standard POSIX I/O calls. When a training process requests a data sample, FitCache checks the local DRAM tier, then the NVMe tier, and finally the remote PFS. If the data is not in the fastest tiers, it is fetched and asynchronously promoted to the upper tiers for future access.
 
 ## Compile and Run
-> **Note**: The following instructions are primarily optimized for the **Frontier** supercomputer at Oak Ridge National Laboratory (ORNL). However, the deployment process on other HPC clusters, such as **ARC**, follows a very similar workflow.
+> **Note**: The following instructions are primarily optimized for the **Frontier** supercomputer at Oak Ridge National Laboratory (ORNL). However, the deployment process on other HPC clusters, such as [**ARC**](https://arcb.csc.ncsu.edu/~mueller/cluster/arc/), follows a very similar workflow.
 
 ### Prerequisites
 To build and run FitCache, ensure the following dependencies are installed:
