@@ -1,4 +1,4 @@
-# FitCache
+# FitCache: A Transparent Drop-In Framework for Multi-Tier Caching to Accelerate Distributed Deep Learning Workloads
 
 **FitCache** is a transparent, drop-in multi-tier caching framework designed to accelerate distributed Deep Learning (DL) workloads. By coordinating memory (DRAM/PMem) and NVMe storage as hierarchical caches atop Parallel File Systems (PFS), FitCache eliminates I/O bottlenecks and optimizes data loading performance. This work has been accepted to *Proceedings of the 40th IEEE International Parallel & Distributed Processing Symposium ([**IPDPS 2026**](https://www.ipdps.org/)).*
 
