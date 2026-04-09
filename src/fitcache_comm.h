@@ -9,6 +9,7 @@ extern "C" {
 }
 
 #include <string>
+#include <atomic>
 #include "fitcache_cache_policy.h"
 using namespace std;
 
@@ -16,7 +17,7 @@ struct ms_read_state;
 
 extern hg_class_t *hg_class;
 extern hg_context_t *hg_context;
-extern int fitcache_progress_thread_shutdown_flags;
+extern std::atomic<int> fitcache_progress_thread_shutdown_flags;
 extern int fitcache_server_rank;
 extern int server_rank;
 extern "C" hg_return_t fitcache_rpc_handler_bulk_cb(const struct hg_cb_info *info);
@@ -38,17 +39,17 @@ typedef struct {
 
 
 //BULK Read Handler
-MERCURY_GEN_PROC(fitcache_rpc_out_t, ((int32_t)(ret)))
-MERCURY_GEN_PROC(fitcache_rpc_in_t, ((int32_t)(input_val))((hg_bulk_t)(bulk_handle))((int32_t)(accessfd))((int64_t)(offset))((int32_t)(requested_tier)))
+MERCURY_GEN_PROC(fitcache_rpc_out_t, ((int64_t)(ret)))
+MERCURY_GEN_PROC(fitcache_rpc_in_t, ((int64_t)(input_val))((hg_bulk_t)(bulk_handle))((int32_t)(accessfd))((int64_t)(offset))((int32_t)(requested_tier)))
 
 //RPC Seek Handler
-MERCURY_GEN_PROC(fitcache_seek_out_t, ((int32_t)(ret)))
+MERCURY_GEN_PROC(fitcache_seek_out_t, ((int64_t)(ret)))
 /*
     typedef struct {
-        int32_t ret;
+        int64_t ret;
     } fitcache_seek_out_t;
 */
-MERCURY_GEN_PROC(fitcache_seek_in_t, ((int32_t)(fd))((int32_t)(offset))((int32_t)(whence)))
+MERCURY_GEN_PROC(fitcache_seek_in_t, ((int32_t)(fd))((int64_t)(offset))((int32_t)(whence)))
 
 
 //Close Handler input arg
@@ -73,7 +74,7 @@ hg_context_t *fitcache_comm_get_context();
 
 
 //Client
-void fitcache_client_comm_gen_seek_rpc(uint32_t svr_hash, int fd, int offset, int whence);
+void fitcache_client_comm_gen_seek_rpc(uint32_t svr_hash, int fd, int64_t offset, int whence);
 void fitcache_client_comm_gen_read_rpc(uint32_t svr_hash, int localfd, void* buffer, ssize_t count, off_t offset);
 
 // Multi source read function

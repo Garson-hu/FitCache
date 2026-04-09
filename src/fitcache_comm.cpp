@@ -17,13 +17,14 @@ extern "C" {
 #include <sys/stat.h>
 #include <string>
 #include <iostream>
-#include <map>	
+#include <map>
+#include <atomic>
 #include "fitcache_comm.h"
 
 
 hg_class_t *hg_class = NULL;
 hg_context_t *hg_context = NULL;
-int fitcache_progress_thread_shutdown_flags = 0;
+std::atomic<int> fitcache_progress_thread_shutdown_flags{0};
 int fitcache_server_rank = -1;
 int server_rank = -1;
 

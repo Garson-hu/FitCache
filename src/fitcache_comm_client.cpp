@@ -60,7 +60,7 @@ static std::unordered_map<std::string, fitcache_file_sync_context*> file_sync_ma
 static std::mutex file_sync_map_mutex;  // Protects the global map
 
 // File descriptor state management with sharding
-#define FD_STATE_SHARDS 16
+#define FD_STATE_SHARDS 256
 #define GET_FD_SHARD(fd) ((fd) % FD_STATE_SHARDS)
 
 enum fitcache_fd_state {
@@ -216,6 +216,7 @@ static hg_id_t fitcache_client_close_id;
 static hg_id_t fitcache_client_seek_id;
 
 /* Mercury Data Caching */
+static std::mutex address_cache_mutex;  // Protects address_cache
 std::map<int, std::string> address_cache;  // Key: Rank, Value: Server Address
 extern std::map<int, int > fd_redir_map;
 extern std::map<int, std::string > fd_map;
@@ -591,7 +592,7 @@ void fitcache_client_comm_gen_read_rpc_with_ms(uint32_t svr_hash, int localfd, v
 
 }
 
-void fitcache_client_comm_gen_seek_rpc(uint32_t svr_hash, int fd, int offset, int whence)
+void fitcache_client_comm_gen_seek_rpc(uint32_t svr_hash, int fd, int64_t offset, int whence)
 {
     FitCache_TIMING("HvacCommClient_gen_seek_rpc_Total");
     
@@ -657,11 +658,14 @@ hg_addr_t fitcache_client_comm_lookup_addr(int rank)
     FitCache_TIMING("HvacCommClient_Lookup_Addr_TOTAL");
     
 	// L4C_INFO("Guangxing RANK %d", rank);
-	if (address_cache.find(rank) != address_cache.end())
 	{
-        hg_addr_t target_server;
-        HG_Addr_lookup2(fitcache_comm_get_class(), address_cache[rank].c_str(), &target_server);
-		return target_server;
+		std::lock_guard<std::mutex> lock(address_cache_mutex);
+		if (address_cache.find(rank) != address_cache.end())
+		{
+			hg_addr_t target_server;
+			HG_Addr_lookup2(fitcache_comm_get_class(), address_cache[rank].c_str(), &target_server);
+			return target_server;
+		}
 	}
 
 	/* The hardway */
@@ -674,20 +678,21 @@ hg_addr_t fitcache_client_comm_lookup_addr(int rank)
 	FILE *na_config = NULL;
 	sprintf(filename, "./.ports.cfg.%s", jobid);
 	na_config = fopen(filename,"r+");
-    
+
 	while (fscanf(na_config, "%d %s\n",&svr_rank, svr_str) == 2)
 	{
 		if (svr_rank == rank){
-			L4C_INFO("Connecting to %s %d\n", svr_str, svr_rank);            
+			L4C_INFO("Connecting to %s %d\n", svr_str, svr_rank);
 			svr_found = true;
             break;
 		}
 	}
+	fclose(na_config);
 
 	if (svr_found){
-		//Do something
-        address_cache[rank] = svr_str;
-        HG_Addr_lookup2(fitcache_comm_get_class(),svr_str,&target_server);		
+		std::lock_guard<std::mutex> lock(address_cache_mutex);
+		address_cache[rank] = svr_str;
+		HG_Addr_lookup2(fitcache_comm_get_class(),svr_str,&target_server);
 	}
 
 	return target_server;
